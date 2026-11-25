@@ -5,6 +5,35 @@
   var $ = function (id) { return document.getElementById(id); };
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  var CN_MONTHS = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '冬月', '腊月'];
+
+  function lunarMonthsOf(year) {
+    return LunarYear.fromYear(year).getMonths().filter(function (m) { return m.getYear() === year; })
+      .map(function (m) {
+        var v = m.getMonth();
+        return { value: v, label: (v < 0 ? '闰' : '') + CN_MONTHS[Math.abs(v) - 1], days: m.getDayCount() };
+      });
+  }
+
+  function monthDays(cal, year, month) {
+    if (cal === 'solar') return new Date(year, month, 0).getDate();
+    var months = lunarMonthsOf(year);
+    for (var i = 0; i < months.length; i++) {
+      if (months[i].value === month) return months[i].days;
+    }
+    return 30;
+  }
+
+  function formatDisplayDate(cal, d) {
+    if (cal === 'lunar') {
+      var months = lunarMonthsOf(d.year);
+      var found = null;
+      for (var i = 0; i < months.length; i++) if (months[i].value === d.month) found = months[i];
+      return '农历：' + d.year + '年' + (found ? found.label : d.month + '月') + d.day + '日 ' + pad(d.hour) + ':' + pad(d.minute);
+    }
+    return '公历：' + d.year + '年' + d.month + '月' + d.day + '日 ' + pad(d.hour) + ':' + pad(d.minute);
+  }
+
   function todayStr() {
     var d = new Date();
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -19,12 +48,19 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  function nowParts() {
+    var d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate(), hour: d.getHours(), minute: d.getMinutes() };
+  }
+
   var state = {
     name: '',
     gender: 1,
     remark: '',
     date: todayStr(),
     time: timeStr(),
+    calendar: 'solar',
+    displayDate: nowParts(),
     region: { name: '未知地-即北京时间', longitude: null },
     save: true,
     currentResult: null,
@@ -45,6 +81,163 @@
     toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
   }
 
+  /* ---------- 滚轮日期选择器 ---------- */
+  var picker = {
+    cal: 'solar', year: 2026, month: 1, day: 1, hour: 0, minute: 0,
+    sound: true, timer: null
+  };
+  var audioCtx = null;
+
+  function tickSound() {
+    if (!picker.sound) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.035);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.04);
+    } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+
+  function pickerToSolar(p) {
+    if (p.cal === 'solar') {
+      return { year: p.year, month: p.month, day: p.day, hour: p.hour, minute: p.minute };
+    }
+    var solar = Lunar.fromYmd(p.year, p.month, p.day).getSolar();
+    return { year: solar.getYear(), month: solar.getMonth(), day: solar.getDay(), hour: p.hour, minute: p.minute };
+  }
+
+  function solarToPicker(s, cal) {
+    if (cal === 'solar') {
+      return { year: s.year, month: s.month, day: s.day, hour: s.hour, minute: s.minute };
+    }
+    var lunar = Solar.fromYmd(s.year, s.month, s.day).getLunar();
+    return { year: lunar.getYear(), month: lunar.getMonth(), day: lunar.getDay(), hour: s.hour, minute: s.minute };
+  }
+
+  function clampPicker() {
+    if (picker.cal === 'lunar') {
+      var months = lunarMonthsOf(picker.year);
+      var found = false;
+      for (var i = 0; i < months.length; i++) if (months[i].value === picker.month) found = true;
+      if (!found && months.length) picker.month = months[0].value;
+    }
+    var max = monthDays(picker.cal, picker.year, picker.month);
+    if (picker.day > max) picker.day = max;
+    if (picker.day < 1) picker.day = 1;
+  }
+
+  function wheelItems(key) {
+    var items = [];
+    var i;
+    if (key === 'year') {
+      for (i = 1900; i <= 2100; i++) items.push({ value: i, label: String(i) });
+    } else if (key === 'month') {
+      if (picker.cal === 'solar') {
+        for (i = 1; i <= 12; i++) items.push({ value: i, label: i + '月' });
+      } else {
+        items = lunarMonthsOf(picker.year).map(function (m) { return { value: m.value, label: m.label }; });
+      }
+    } else if (key === 'day') {
+      var max = monthDays(picker.cal, picker.year, picker.month);
+      for (i = 1; i <= max; i++) items.push({ value: i, label: i + '日' });
+    } else if (key === 'hour') {
+      for (i = 0; i < 24; i++) items.push({ value: i, label: i + '时' });
+    } else if (key === 'minute') {
+      for (i = 0; i < 60; i++) items.push({ value: i, label: i + '分' });
+    }
+    return items;
+  }
+
+  function renderWheelCol(key) {
+    var col = document.querySelector('.wheel-col[data-key="' + key + '"]');
+    if (!col) return;
+    var items = wheelItems(key);
+    col._items = items;
+    var selected = 0;
+    for (var i = 0; i < items.length; i++) if (items[i].value === picker[key]) selected = i;
+    col.innerHTML = '<div class="wheel-list">' + items.map(function (it) {
+      return '<div class="wheel-item">' + esc(it.label) + '</div>';
+    }).join('') + '</div>';
+    col.scrollTop = selected * 40;
+  }
+
+  function renderAllWheels() {
+    ['year', 'month', 'day', 'hour', 'minute'].forEach(renderWheelCol);
+  }
+
+  function updatePickerPreview() {
+    var s = pickerToSolar(picker);
+    $('dt-solar-preview').textContent = '对应公历：' + s.year + '-' + pad(s.month) + '-' + pad(s.day) + ' ' + pad(s.hour) + ':' + pad(s.minute);
+  }
+
+  function onWheelScroll(e) {
+    var col = e.currentTarget;
+    var key = col.dataset.key;
+    var items = col._items;
+    if (!items || !items.length) return;
+    var idx = Math.round(col.scrollTop / 40);
+    if (idx < 0 || idx >= items.length) return;
+    var value = items[idx].value;
+    if (picker[key] === value) return;
+    picker[key] = value;
+    tickSound();
+    clearTimeout(picker.timer);
+    picker.timer = setTimeout(function () {
+      clampPicker();
+      if (key === 'year') renderWheelCol('month');
+      if (key === 'year' || key === 'month') renderWheelCol('day');
+      updatePickerPreview();
+    }, 130);
+  }
+
+  function openPicker() {
+    var d = state.date.split('-');
+    var t = state.time.split(':');
+    var solar = {
+      year: parseInt(d[0], 10), month: parseInt(d[1], 10), day: parseInt(d[2], 10),
+      hour: parseInt(t[0], 10), minute: parseInt(t[1], 10)
+    };
+    picker.cal = state.calendar;
+    var parts = solarToPicker(solar, picker.cal);
+    picker.year = parts.year;
+    picker.month = parts.month;
+    picker.day = parts.day;
+    picker.hour = parts.hour;
+    picker.minute = parts.minute;
+    clampPicker();
+    document.querySelectorAll('.cal-tab').forEach(function (b) {
+      b.classList.toggle('selected', b.dataset.cal === picker.cal);
+    });
+    $('datetime-modal').classList.remove('hidden');
+    renderAllWheels();
+    updatePickerPreview();
+  }
+
+  function switchCalendar(cal) {
+    if (cal === picker.cal) return;
+    var solar = pickerToSolar(picker);
+    picker.cal = cal;
+    var parts = solarToPicker(solar, cal);
+    picker.year = parts.year;
+    picker.month = parts.month;
+    picker.day = parts.day;
+    clampPicker();
+    document.querySelectorAll('.cal-tab').forEach(function (b) {
+      b.classList.toggle('selected', b.dataset.cal === cal);
+    });
+    renderAllWheels();
+    updatePickerPreview();
+  }
+
   function showView(name) {
     ['input', 'result', 'cases'].forEach(function (v) {
       $('view-' + v).classList.toggle('active', v === name);
@@ -58,8 +251,7 @@
   function syncInputUI() {
     $('input-name').value = state.name;
     $('input-remark').value = state.remark;
-    var d = state.date.split('-');
-    $('datetime-text').textContent = '公历：' + d[0] + '年' + Number(d[1]) + '月' + Number(d[2]) + '日 ' + state.time;
+    $('datetime-text').textContent = formatDisplayDate(state.calendar, state.displayDate);
     $('region-text').textContent = '地区：' + state.region.name;
     document.querySelectorAll('.gender-option').forEach(function (b) {
       b.classList.toggle('selected', Number(b.dataset.gender) === state.gender);
@@ -75,6 +267,8 @@
       remark: state.remark,
       date: state.date,
       time: state.time,
+      calendar: state.calendar,
+      displayDate: state.displayDate,
       region: state.region
     };
   }
@@ -163,7 +357,10 @@
 
     listEl.innerHTML = cases.map(function (c) {
       var selected = !!state.selected[c.id];
-      var meta = c.date + ' ' + c.time + ' · ' + ((c.region && c.region.name) || '未知地');
+      var meta = (c.calendar === 'lunar' && c.displayDate && c.displayDate.year)
+        ? formatDisplayDate('lunar', c.displayDate)
+        : c.date + ' ' + c.time;
+      meta += ' · ' + ((c.region && c.region.name) || '未知地');
       return '<div class="case-item' + (selected ? ' selected' : '') + '" data-id="' + esc(c.id) + '">'
         + '<input type="checkbox" class="case-check" ' + (selected ? 'checked' : '') + ' data-id="' + esc(c.id) + '" aria-label="选择命例">'
         + '<div class="case-main" data-open="' + esc(c.id) + '">'
@@ -184,6 +381,17 @@
     state.remark = c.remark || '';
     state.date = c.date;
     state.time = c.time;
+    state.calendar = c.calendar === 'lunar' ? 'lunar' : 'solar';
+    if (c.displayDate && c.displayDate.year) {
+      state.displayDate = c.displayDate;
+    } else {
+      var dd = c.date.split('-');
+      var tt = c.time.split(':');
+      state.displayDate = {
+        year: parseInt(dd[0], 10), month: parseInt(dd[1], 10), day: parseInt(dd[2], 10),
+        hour: parseInt(tt[0], 10), minute: parseInt(tt[1], 10)
+      };
+    }
     state.region = c.region || { name: '未知地-即北京时间', longitude: null };
     state.currentCaseId = id;
     state.resultOrigin = 'cases';
@@ -243,15 +451,27 @@
       syncInputUI();
     };
 
-    $('btn-pick-datetime').onclick = function () {
-      $('picker-date').value = state.date;
-      $('picker-time').value = state.time;
-      $('datetime-modal').classList.remove('hidden');
+    $('btn-pick-datetime').onclick = openPicker;
+    document.querySelectorAll('.cal-tab').forEach(function (b) {
+      b.onclick = function () { switchCalendar(this.dataset.cal); };
+    });
+    $('dt-sound-toggle').onclick = function () {
+      picker.sound = !picker.sound;
+      this.textContent = '声音：' + (picker.sound ? '开' : '关');
+      if (picker.sound) tickSound();
     };
+    document.querySelectorAll('.wheel-col').forEach(function (col) {
+      col.addEventListener('scroll', onWheelScroll, { passive: true });
+    });
     $('btn-datetime-confirm').onclick = function () {
-      if (!$('picker-date').value || !$('picker-time').value) { toast('请选择完整日期和时间'); return; }
-      state.date = $('picker-date').value;
-      state.time = $('picker-time').value;
+      var s = pickerToSolar(picker);
+      state.calendar = picker.cal;
+      state.displayDate = {
+        year: picker.year, month: picker.month, day: picker.day,
+        hour: picker.hour, minute: picker.minute
+      };
+      state.date = s.year + '-' + pad(s.month) + '-' + pad(s.day);
+      state.time = pad(s.hour) + ':' + pad(s.minute);
       syncInputUI();
       $('datetime-modal').classList.add('hidden');
     };
