@@ -464,6 +464,87 @@ html, body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ---------- 滚轮日期选择器 ---------- */
+.datetime-sheet { background: #fff; }
+.dt-head { padding: 10px 14px; }
+.calendar-tabs {
+  display: flex;
+  background: #e9e9eb;
+  border-radius: 8px;
+  padding: 2px;
+}
+.cal-tab {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  color: #555;
+  padding: 6px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cal-tab.selected {
+  background: #fff;
+  color: #111;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,.16);
+}
+.wheel-wrap {
+  position: relative;
+  height: 220px;
+  background: #fff;
+  overflow: hidden;
+}
+.wheel-highlight {
+  position: absolute;
+  top: 90px;
+  left: 6px;
+  right: 6px;
+  height: 40px;
+  background: #ededed;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 0;
+}
+.wheel-row {
+  display: flex;
+  height: 220px;
+  position: relative;
+  z-index: 1;
+}
+.wheel-col {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 220px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.wheel-col::-webkit-scrollbar { display: none; }
+.wheel-list { padding: 90px 0; }
+.wheel-item {
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 19px;
+  color: #222;
+  scroll-snap-align: center;
+  white-space: nowrap;
+}
+.wheel-item.far { color: #aaa; }
+.dt-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px calc(14px + env(safe-area-inset-bottom));
+  font-size: 13px;
+  color: #888;
+  border-top: 1px solid #f0f0f0;
+}
+.dt-sound { color: var(--blue); cursor: pointer; }
+
 @media (min-width: 541px) {
   #app { height: calc(100% - 20px); margin-top: 10px; border-radius: 10px; }
   .sheet { border-radius: 14px; margin-bottom: 0; }
