@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="八字排盘">
+  <meta name="description" content="手机八字排盘工具，可保存命例、导出 Word，支持添加到桌面离线使用。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <title>八字排盘</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ 输入页 ============ -->
+  <section id="view-input" class="view active">
+    <header class="navbar">
+      <button class="nav-btn nav-left" id="btn-input-back">返回</button>
+      <h1 class="nav-title">八字排盘</h1>
+      <button class="nav-btn nav-right" id="btn-goto-cases">命例</button>
+    </header>
+
+    <main class="page page-input">
+      <div class="card card-line">
+        <div class="form-row">
+          <label class="form-label" for="input-name">姓名</label>
+          <input id="input-name" class="text-input" type="text" placeholder="求测人姓名" maxlength="20" autocomplete="off">
+          <div class="gender-switch" id="gender-switch" role="group" aria-label="性别">
+            <button type="button" class="gender-option selected" data-gender="1">男</button>
+            <button type="button" class="gender-option" data-gender="0">女</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-line">
+        <div class="form-row">
+          <label class="form-label" for="input-remark">备注</label>
+          <input id="input-remark" class="text-input" type="text" placeholder="备注会在八字命例里显示" maxlength="60" autocomplete="off">
+        </div>
+      </div>
+
+      <button type="button" class="field-button" id="btn-pick-datetime">
+        <span id="datetime-text">公历：2026年11月26日 6:24</span>
+      </button>
+
+      <button type="button" class="field-button" id="btn-pick-region">
+        <span id="region-text">地区：未知地-即北京时间</span>
+      </button>
+
+      <div class="action-row">
+        <div class="switch-wrap">
+          <button type="button" class="switch on" id="switch-save" role="switch" aria-checked="true" aria-label="保存此八字"><span class="switch-knob"></span></button>
+          <span class="switch-label">保存此八字</span>
+        </div>
+        <button type="button" class="action-button" id="btn-calculate">排八字</button>
+      </div>
+
+      <p class="hint-text">提示：点击时间或地区可修改。真太阳时按经度自动校正，未知地则使用北京时间。</p>
+    </main>
+  </section>
+
+  <!-- ============ 排盘结果页 ============ -->
+  <section id="view-result" class="view">
+    <header class="navbar">
+      <button class="nav-btn nav-left" id="btn-result-back">返回</button>
+      <h1 class="nav-title">八字排盘内容</h1>
+      <button class="nav-btn nav-right" id="btn-result-to-input">排盘界面</button>
+    </header>
+
+    <main class="page page-result" id="result-content">
+      <!-- 由 JS 渲染 -->
+    </main>
+
+    <footer class="result-footer">
+      <button type="button" class="footer-btn primary" id="btn-export-current">导出 Word</button>
+      <button type="button" class="footer-btn" id="btn-save-current">保存命例</button>
+    </footer>
+  </section>
+
+  <!-- ============ 命例页 ============ -->
+  <section id="view-cases" class="view">
+    <header class="navbar">
+      <button class="nav-btn nav-left" id="btn-cases-back">返回</button>
+      <h1 class="nav-title">命例</h1>
+      <button class="nav-btn nav-right" id="btn-manage-cases">管理</button>
+    </header>
+
+    <main class="page page-cases">
+      <div class="case-toolbar" id="case-toolbar">
+        <button type="button" class="tool-btn" id="btn-select-all">全选</button>
+        <button type="button" class="tool-btn" id="btn-export-selected">导出选中</button>
+        <button type="button" class="tool-btn danger" id="btn-delete-selected">批量删除</button>
+      </div>
+      <div id="cases-list" class="cases-list"></div>
+      <div id="cases-empty" class="empty-state hidden">
+        <div class="empty-icon">册</div>
+        <p>还没有保存任何命例</p>
+        <p class="empty-sub">在排盘界面打开“保存此八字”后排盘即可保存</p>
+        <button type="button" class="action-button" id="btn-empty-to-input">去排盘</button>
+      </div>
+    </main>
+
+    <footer class="result-footer" id="cases-footer">
+      <button type="button" class="footer-btn" id="btn-import-cases">导入</button>
+      <button type="button" class="footer-btn" id="btn-backup-cases">备份</button>
+      <button type="button" class="footer-btn" id="btn-export-all">导出 Word</button>
+    </footer>
+  </section>
+
+</div>
+
+<!-- ============ 时间选择弹层 ============ -->
+<div class="modal hidden" id="datetime-modal">
+  <div class="modal-backdrop" data-close="datetime-modal"></div>
+  <div class="sheet">
+    <div class="sheet-head">
+      <button type="button" class="sheet-btn" data-close="datetime-modal">取消</button>
+      <strong>选择公历时间</strong>
+      <button type="button" class="sheet-btn primary" id="btn-datetime-confirm">确定</button>
+    </div>
+    <div class="sheet-body">
+      <label class="sheet-label">日期</label>
+      <input type="date" id="picker-date" class="picker-input">
+      <label class="sheet-label">时间</label>
+      <input type="time" id="picker-time" class="picker-input" step="60">
+      <p class="sheet-note">按北京时间填写；选择地区后会按经度换算为真太阳时排盘。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 地区选择弹层 ============ -->
+<div class="modal hidden" id="region-modal">
+  <div class="modal-backdrop" data-close="region-modal"></div>
+  <div class="sheet">
+    <div class="sheet-head">
+      <button type="button" class="sheet-btn" data-close="region-modal">取消</button>
+      <strong>选择地区</strong>
+      <button type="button" class="sheet-btn primary" id="btn-region-confirm">确定</button>
+    </div>
+    <div class="sheet-body">
+      <div class="region-list" id="region-list"></div>
+      <label class="sheet-label">自定义经度（东经，选填）</label>
+      <input type="number" id="picker-longitude" class="picker-input" min="70" max="140" step="0.1" placeholder="如 116.4">
+      <p class="sheet-note">真太阳时 = 北京时间 + (当地经度 − 120°) × 4 分钟。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 确认弹层 ============ -->
+<div class="modal hidden" id="confirm-modal">
+  <div class="modal-backdrop" data-close="confirm-modal"></div>
+  <div class="dialog">
+    <h2 id="confirm-title">确认操作</h2>
+    <p id="confirm-message"></p>
+    <div class="dialog-actions">
+      <button type="button" class="footer-btn" data-close="confirm-modal">取消</button>
+      <button type="button" class="footer-btn danger-solid" id="btn-confirm-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<input type="file" id="file-import" accept="application/json,.json" class="hidden">
+
+<script src="./lib/lunar.js"></script>
+<script src="./lib/jszip.min.js"></script>
+<script src="./js/bazi.js"></script>
+<script src="./js/storage.js"></script>
+<script src="./js/word.js"></script>
+<script src="./js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
