@@ -36,6 +36,14 @@
       remark: String(input.remark || '').trim(),
       date: String(input.date || ''),
       time: String(input.time || ''),
+      calendar: input.calendar === 'lunar' ? 'lunar' : 'solar',
+      displayDate: (input.displayDate && input.displayDate.year) ? {
+        year: Number(input.displayDate.year),
+        month: Number(input.displayDate.month),
+        day: Number(input.displayDate.day),
+        hour: Number(input.displayDate.hour),
+        minute: Number(input.displayDate.minute)
+      } : null,
       region: input.region || { name: '未知地-即北京时间', longitude: null },
       createdAt: input.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
