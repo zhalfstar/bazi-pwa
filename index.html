@@ -116,21 +116,30 @@
 
 </div>
 
-<!-- ============ 时间选择弹层 ============ -->
+<!-- ============ 滚轮时间选择弹层 ============ -->
 <div class="modal hidden" id="datetime-modal">
   <div class="modal-backdrop" data-close="datetime-modal"></div>
-  <div class="sheet">
-    <div class="sheet-head">
-      <button type="button" class="sheet-btn" data-close="datetime-modal">取消</button>
-      <strong>选择公历时间</strong>
-      <button type="button" class="sheet-btn primary" id="btn-datetime-confirm">确定</button>
+  <div class="sheet datetime-sheet">
+    <div class="sheet-head dt-head">
+      <div class="calendar-tabs" role="group" aria-label="历法">
+        <button type="button" class="cal-tab" data-cal="solar">公历</button>
+        <button type="button" class="cal-tab selected" data-cal="lunar">农历</button>
+      </div>
+      <button type="button" class="sheet-btn primary" id="btn-datetime-confirm">确认</button>
     </div>
-    <div class="sheet-body">
-      <label class="sheet-label">日期</label>
-      <input type="date" id="picker-date" class="picker-input">
-      <label class="sheet-label">时间</label>
-      <input type="time" id="picker-time" class="picker-input" step="60">
-      <p class="sheet-note">按北京时间填写；选择地区后会按经度换算为真太阳时排盘。</p>
+    <div class="wheel-wrap">
+      <div class="wheel-highlight"></div>
+      <div class="wheel-row" id="wheel-row">
+        <div class="wheel-col" data-key="year"></div>
+        <div class="wheel-col" data-key="month"></div>
+        <div class="wheel-col" data-key="day"></div>
+        <div class="wheel-col" data-key="hour"></div>
+        <div class="wheel-col" data-key="minute"></div>
+      </div>
+    </div>
+    <div class="dt-footnote">
+      <span id="dt-solar-preview"></span>
+      <span class="dt-sound" id="dt-sound-toggle" role="button" tabindex="0">声音：开</span>
     </div>
   </div>
 </div>
