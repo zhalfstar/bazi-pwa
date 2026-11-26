@@ -42,7 +42,7 @@
       <div class="card card-line">
         <div class="form-row">
           <label class="form-label" for="input-remark">备注</label>
-          <input id="input-remark" class="text-input" type="text" placeholder="备注会在八字命例里显示" maxlength="60" autocomplete="off">
+          <input id="input-remark" class="text-input" type="text" placeholder="备注会在八字命例里显示" maxlength="200" autocomplete="off">
         </div>
       </div>
 
@@ -171,6 +171,19 @@
     <div class="dialog-actions">
       <button type="button" class="footer-btn" data-close="confirm-modal">取消</button>
       <button type="button" class="footer-btn danger-solid" id="btn-confirm-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 备注编辑弹层 ============ -->
+<div class="modal hidden" id="remark-modal">
+  <div class="modal-backdrop" data-close="remark-modal"></div>
+  <div class="dialog remark-dialog">
+    <h2 id="remark-dialog-title">修改备注</h2>
+    <textarea id="remark-input" class="remark-input" maxlength="200" placeholder="输入备注信息（最多 200 字）"></textarea>
+    <div class="dialog-actions">
+      <button type="button" class="footer-btn" data-close="remark-modal">取消</button>
+      <button type="button" class="footer-btn primary" id="btn-remark-save">保存</button>
     </div>
   </div>
 </div>
