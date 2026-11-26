@@ -176,7 +176,6 @@
     if (result.correctionText) html += infoLine('真太阳时', result.correctionText.replace(/^真太阳时：/, ''));
     html += infoLine('农历', result.lunarText);
     html += infoLine('年龄', result.ageText + '，' + result.weekday);
-    html += infoLine('备注', inp.remark || '无');
     html += infoLine('四柱', result.pillars.map(function (p) { return p.gan + p.zhi; }).join('  '));
 
     html += sectionTitle('一、四柱排盘');
@@ -186,6 +185,9 @@
     html += para(run(result.yun.startText, { size: 21 }), { after: 40 });
     html += para(run(result.yun.jiaoText, { size: 21 }), { after: 80 });
     html += buildDayunTable(result);
+
+    html += sectionTitle('三、备注');
+    html += para(run(inp.remark || '无', { size: 21 }), { after: 120 });
 
     html += para(run('本命例由「八字排盘」生成 · 导出时间：' + new Date().toLocaleString('zh-CN'), { size: 16, color: '999999' }), { align: 'center', before: 240 });
     return html;
