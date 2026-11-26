@@ -83,6 +83,48 @@ html, body {
 .nav-left { justify-self: start; }
 .nav-right { justify-self: end; }
 .nav-btn:active { opacity: .5; }
+.nav-right-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.nav-right-actions .nav-btn { padding: 8px 6px; }
+
+.search-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid var(--nav-border);
+}
+.search-bar.hidden { display: none; }
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: #f7f7f8;
+  border: 1px solid #dedee0;
+  border-radius: 6px;
+  outline: none;
+}
+.search-input:focus { border-color: var(--blue); background: #fff; }
+.search-clear {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 6px 2px;
+  cursor: pointer;
+}
 
 /* ---------- 页面容器 ---------- */
 .page {
