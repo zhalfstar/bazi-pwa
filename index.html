@@ -89,8 +89,16 @@
     <header class="navbar">
       <button class="nav-btn nav-left" id="btn-cases-back">返回</button>
       <h1 class="nav-title">命例</h1>
-      <button class="nav-btn nav-right" id="btn-manage-cases">管理</button>
+      <div class="nav-right-actions">
+        <button class="nav-btn" id="btn-search-cases">搜索</button>
+        <button class="nav-btn" id="btn-manage-cases">管理</button>
+      </div>
     </header>
+
+    <div class="search-bar hidden" id="search-bar">
+      <input type="search" id="search-input" class="search-input" placeholder="搜索姓名、备注、日期、地区" autocomplete="off">
+      <button type="button" id="btn-search-clear" class="search-clear">清除</button>
+    </div>
 
     <main class="page page-cases">
       <div class="case-toolbar" id="case-toolbar">
@@ -101,8 +109,8 @@
       <div id="cases-list" class="cases-list"></div>
       <div id="cases-empty" class="empty-state hidden">
         <div class="empty-icon">册</div>
-        <p>还没有保存任何命例</p>
-        <p class="empty-sub">在排盘界面打开“保存此八字”后排盘即可保存</p>
+        <p id="cases-empty-title">还没有保存任何命例</p>
+        <p class="empty-sub" id="cases-empty-sub">在排盘界面打开“保存此八字”后排盘即可保存</p>
         <button type="button" class="action-button" id="btn-empty-to-input">去排盘</button>
       </div>
     </main>
