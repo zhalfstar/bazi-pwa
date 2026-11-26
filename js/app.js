@@ -309,7 +309,6 @@
     if (r.correctionText) info += '<p>' + esc(r.correctionText) + '</p>';
     info += '<p>年龄：' + esc(r.ageText) + '。出生当日:' + esc(r.weekday) + '</p>'
       + '<p>农历：' + esc(r.lunarText) + '</p>';
-    if (r.input.remark) info += '<p>备注：' + esc(r.input.remark) + '</p>';
 
     var pillars = r.pillars.map(function (p) {
       return '<div class="pillar">'
@@ -342,6 +341,11 @@
       + '<div class="pillars">' + pillars + '</div>'
       + '<div class="yun-intro"><p>' + esc(r.yun.startText) + '</p><p>' + esc(r.yun.jiaoText) + '</p></div>'
       + yunHtml
+      + '<div class="result-remark" data-edit-remark="result">'
+      + '<div class="result-remark-head"><span>备注</span><span class="result-remark-edit">点击修改</span></div>'
+      + '<div class="result-remark-text' + (r.input.remark ? '' : ' empty') + '">'
+      + (r.input.remark ? esc(r.input.remark) : '暂无备注，点击添加')
+      + '</div></div>'
       + '<div class="result-tail">八字排盘 · 结果仅供传统文化研究参考</div>';
   }
 
@@ -366,7 +370,9 @@
         + '<div class="case-main" data-open="' + esc(c.id) + '">'
         + '<div class="case-name">' + esc(c.name || '未命名') + '<span class="case-gender">' + (c.gender === 0 ? '女' : '男') + '</span></div>'
         + '<div class="case-meta">' + esc(meta) + '</div>'
-        + (c.remark ? '<div class="case-remark">' + esc(c.remark) + '</div>' : '')
+        + '<div class="case-remark' + (c.remark ? '' : ' empty') + '" data-edit-remark="' + esc(c.id) + '">'
+        + (c.remark ? '<span class="remark-tag">备注</span>' + esc(c.remark) : '点击添加备注')
+        + '</div>'
         + '</div>'
         + '<button type="button" class="case-del" data-del="' + esc(c.id) + '">删除</button>'
         + '</div>';
@@ -402,6 +408,54 @@
       renderResult(r);
       showView('result');
     } catch (e) { toast('排盘失败：' + e.message); }
+  }
+
+  var remarkTarget = null;
+
+  function openRemarkEditor(target) {
+    remarkTarget = target;
+    var current = '';
+    if (target === 'result') {
+      current = state.remark || '';
+      $('remark-dialog-title').textContent = '修改备注';
+    } else {
+      var c = CaseStore.get(target);
+      current = c ? (c.remark || '') : '';
+      $('remark-dialog-title').textContent = '修改命例备注';
+    }
+    $('remark-input').value = current;
+    $('remark-modal').classList.remove('hidden');
+    setTimeout(function () { $('remark-input').focus(); }, 50);
+  }
+
+  function saveRemark() {
+    var value = $('remark-input').value.trim();
+    if (remarkTarget === 'result') {
+      state.remark = value;
+      if (state.currentCaseId) CaseStore.update(state.currentCaseId, { remark: value });
+      if (state.currentResult) {
+        state.currentResult.input.remark = value;
+        renderResult(state.currentResult);
+      }
+      toast('备注已更新');
+    } else if (remarkTarget) {
+      var ok = CaseStore.update(remarkTarget, { remark: value });
+      if (ok) {
+        if (state.currentCaseId === remarkTarget) {
+          state.remark = value;
+          if (state.currentResult) {
+            state.currentResult.input.remark = value;
+            renderResult(state.currentResult);
+          }
+        }
+        renderCases();
+        toast('备注已保存');
+      } else {
+        toast('保存失败');
+      }
+    }
+    $('remark-modal').classList.add('hidden');
+    remarkTarget = null;
   }
 
   function askConfirm(title, message, action) {
@@ -578,6 +632,8 @@
     document.addEventListener('click', function (e) {
       var close = e.target.closest('[data-close]');
       if (close) { $(close.dataset.close).classList.add('hidden'); return; }
+      var remark = e.target.closest('[data-edit-remark]');
+      if (remark) { openRemarkEditor(remark.dataset.editRemark); return; }
       var del = e.target.closest('[data-del]');
       if (del) {
         e.stopPropagation();
@@ -606,6 +662,7 @@
       }
     });
 
+    $('btn-remark-save').onclick = saveRemark;
     $('btn-confirm-ok').onclick = function () {
       $('confirm-modal').classList.add('hidden');
       var fn = state.confirmAction;
