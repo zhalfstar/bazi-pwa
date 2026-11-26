@@ -68,6 +68,8 @@
     resultOrigin: 'input',
     manageMode: false,
     selected: {},
+    searchQuery: '',
+    searchOpen: false,
     confirmAction: null,
     pendingRegionIndex: 0
   };
@@ -350,10 +352,29 @@
   }
 
   /* ---------- 命例页 ---------- */
+  function visibleCases() {
+    var all = CaseStore.list();
+    var q = String(state.searchQuery || '').trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(function (c) {
+      var lunar = (c.calendar === 'lunar' && c.displayDate && c.displayDate.year)
+        ? formatDisplayDate('lunar', c.displayDate) : '';
+      var fields = [c.name, c.remark, c.date, c.time, (c.region && c.region.name), lunar];
+      for (var i = 0; i < fields.length; i++) {
+        if (String(fields[i] || '').toLowerCase().indexOf(q) !== -1) return true;
+      }
+      return false;
+    });
+  }
+
   function renderCases() {
-    var cases = CaseStore.list();
+    var cases = visibleCases();
     var listEl = $('cases-list');
     $('cases-empty').classList.toggle('hidden', cases.length > 0);
+    var searching = !!String(state.searchQuery || '').trim();
+    $('cases-empty-title').textContent = searching ? '没有找到匹配的命例' : '还没有保存任何命例';
+    $('cases-empty-sub').textContent = searching ? '试试其他姓名、备注或日期关键词' : '在排盘界面打开“保存此八字”后排盘即可保存';
+    $('btn-empty-to-input').classList.toggle('hidden', searching);
     listEl.classList.toggle('manage-mode', state.manageMode);
     $('btn-manage-cases').textContent = state.manageMode ? '完成' : '管理';
     $('case-toolbar').classList.toggle('hidden', !state.manageMode);
@@ -572,8 +593,29 @@
       if (!state.manageMode) state.selected = {};
       renderCases();
     };
+    $('btn-search-cases').onclick = function () {
+      state.searchOpen = !state.searchOpen;
+      $('search-bar').classList.toggle('hidden', !state.searchOpen);
+      if (state.searchOpen) {
+        $('search-input').focus();
+      } else {
+        state.searchQuery = '';
+        $('search-input').value = '';
+        renderCases();
+      }
+    };
+    $('search-input').oninput = function () {
+      state.searchQuery = this.value;
+      renderCases();
+    };
+    $('btn-search-clear').onclick = function () {
+      $('search-input').value = '';
+      state.searchQuery = '';
+      renderCases();
+      $('search-input').focus();
+    };
     $('btn-select-all').onclick = function () {
-      var cases = CaseStore.list();
+      var cases = visibleCases();
       var ids = cases.map(function (c) { return c.id; });
       var allSelected = ids.length > 0 && ids.every(function (id) { return state.selected[id]; });
       state.selected = {};
