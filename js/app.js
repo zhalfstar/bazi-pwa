@@ -385,12 +385,11 @@
       var meta = (c.calendar === 'lunar' && c.displayDate && c.displayDate.year)
         ? formatDisplayDate('lunar', c.displayDate)
         : c.date + ' ' + c.time;
-      meta += ' · ' + ((c.region && c.region.name) || '未知地');
       return '<div class="case-item' + (selected ? ' selected' : '') + '" data-id="' + esc(c.id) + '">'
         + '<input type="checkbox" class="case-check" ' + (selected ? 'checked' : '') + ' data-id="' + esc(c.id) + '" aria-label="选择命例">'
         + '<div class="case-main" data-open="' + esc(c.id) + '">'
-        + '<div class="case-name">' + esc(c.name || '未命名') + '<span class="case-gender">' + (c.gender === 0 ? '女' : '男') + '</span></div>'
-        + '<div class="case-meta">' + esc(meta) + '</div>'
+        + '<div class="case-name">' + esc(c.name || '未命名') + '</div>'
+        + '<div class="case-meta"><span class="case-gender">' + (c.gender === 0 ? '女' : '男') + '</span>' + esc(meta) + '</div>'
         + '<div class="case-remark' + (c.remark ? '' : ' empty') + '" data-edit-remark="' + esc(c.id) + '">'
         + (c.remark ? '<span class="remark-tag">备注</span>' + esc(c.remark) : '点击添加备注')
         + '</div>'
