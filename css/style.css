@@ -274,6 +274,32 @@ html, body {
 .yun-num { color: #111; font-size: 12px; }
 .yun-dishi { color: var(--dayun-red); font-size: 14px; }
 
+.result-remark {
+  margin: 20px 0 8px;
+  background: #fffef9;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.result-remark-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.result-remark-edit { color: var(--blue); font-size: 14px; font-weight: 400; }
+.result-remark-text {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.result-remark-text.empty { color: #999; }
+
 .result-tail {
   margin: 18px 2px 6px;
   font-size: 13px;
@@ -356,13 +382,21 @@ html, body {
 }
 .case-meta { font-size: 14px; color: #666; line-height: 1.4; }
 .case-remark {
-  font-size: 13px;
-  color: #999;
-  margin-top: 3px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 14px;
+  color: #555;
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: #fffef2;
+  border: 1px dashed #e2c98a;
+  border-radius: 5px;
+  cursor: pointer;
+  line-height: 1.4;
+  word-break: break-word;
 }
+.case-remark:active { background: #fff8dc; }
+.case-remark .remark-tag { color: #a07d2a; font-size: 12px; margin-right: 4px; }
+.case-remark.empty { color: #aaa; }
+.case-remark.hidden { display: none; }
 .case-del {
   flex: 0 0 auto;
   border: 0;
@@ -445,6 +479,23 @@ html, body {
 .dialog p { font-size: 15px; color: #555; line-height: 1.5; margin: 0 0 20px; }
 .dialog-actions { display: flex; gap: 10px; }
 .dialog-actions .footer-btn { min-height: 40px; }
+.remark-dialog { text-align: left; }
+.remark-dialog h2 { text-align: center; }
+.remark-input {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 10px;
+  margin-bottom: 18px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  border: 1px solid #d5d5d8;
+  border-radius: 7px;
+  outline: none;
+}
+.remark-input:focus { border-color: var(--blue); }
 
 .toast {
   position: fixed;
